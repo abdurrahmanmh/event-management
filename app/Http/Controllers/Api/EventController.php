@@ -14,7 +14,36 @@ class EventController extends Controller
      */
     public function index()
     {
-        return EventResource::collection(Event::with('user')->paginate());
+        $query = Event::query();
+        $relations = ['user', 'attendees', 'attendees.user'];
+        //$relations = ['user', 'attendees', 'attendees.user'];
+
+        foreach ($relations as $relation) {
+            
+                $query->when(
+                    $this->shouldIncludeRelation($relation),
+                    fn($q) => $q->with($relation)
+                );
+            
+        }
+
+        return EventResource::collection(
+            $query->latest()->paginate()
+        );
+    }
+
+    protected function shouldIncludeRelation(string $relation): bool
+    {
+        $include = request()->query('include');
+
+        if (!$include) {
+            return false;
+        }
+
+        $relations = array_map('trim', explode(',', $include));
+
+        //dd($relations);
+        return in_array($relation, $relations);
     }
 
     /**
@@ -40,7 +69,7 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
-        $event->load('user', 'attendees');  
+        $event->load('user', 'attendees');
         return new EventResource($event);
     }
 
@@ -51,14 +80,14 @@ class EventController extends Controller
     {
         $event->update(
             $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'description' => 'nullable|string',
-            'start_time' => 'sometimes|date',
-            'end_time' => 'sometimes|date|after:start_time'
-        ])
-    
-    );
-    return new EventResource($event);
+                'name' => 'sometimes|string|max:255',
+                'description' => 'nullable|string',
+                'start_time' => 'sometimes|date',
+                'end_time' => 'sometimes|date|after:start_time'
+            ])
+
+        );
+        return new EventResource($event);
 
     }
 
