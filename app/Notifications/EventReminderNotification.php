@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class EventReminderNotification extends Notification
+class EventReminderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
@@ -39,7 +39,7 @@ class EventReminderNotification extends Notification
             ->line('Reminder You Have an Upcoming Event')
             ->action('View Event', route('events.show', $this->event->id))
             ->line("
-                     The Eveny {$this->event->name} is scheduled to start at {$this->event->start_time}
+                     The Event {$this->event->name} is scheduled to start at {$this->event->start_time}
                      ");
     }
 
